@@ -22,11 +22,3 @@ class Object:
     def rotate(self, degrees: int):
         self.image = pygame.transform.rotate(self.image, degrees)
 
-
-if __name__ == '__main__':
-    wall = Object(44, 44, 'Sprites\\block.png', 0, 150)
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
