@@ -1,11 +1,23 @@
-import sys
-
 import pygame
-from pygame.locals import QUIT
 
 
-class Object:
+# объявление const
+SIZE = WIDTH, HEIGHT = 800, 600
+FPS = 60
+
+# инициализация
+pygame.init()
+
+# подготовка переменных
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Shmup!")
+clock = pygame.time.Clock()
+sprites = pygame.sprite.Group()
+
+
+class Object(pygame.sprite.Sprite):
     def __init__(self, width: int, height: int, path: str, x: int, y: int):
+        pygame.sprite.Sprite.__init__(self)
         self.width = width
         self.height = height
 
@@ -22,3 +34,15 @@ class Object:
     def rotate(self, degrees: int):
         self.image = pygame.transform.rotate(self.image, degrees)
 
+
+if __name__ == '__main__':
+    while pygame.event.wait().type != pygame.quit():
+        # обновление
+        sprites.update()
+
+        # рендеринг
+        screen.fill((0, 0, 0))
+        sprites.draw(screen)
+
+        # вывод
+        pygame.display.flip()
