@@ -29,11 +29,8 @@ class Object(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-    def rotate(self, degrees: int):
-        self.image = pygame.transform.rotate(self.image, degrees)
+    # def rotate(self, degrees: int):
+    #     self.image = pygame.transform.rotate(self.image, degrees)
 
 
 class Player(Object):
@@ -41,20 +38,27 @@ class Player(Object):
         super().__init__(64, 64, 'Enceladus\\Sprites\\char_sprite_1.png', x, y)
         self.health = 3
 
+        self.xspeed, self.yspeed = 0, 0
+
     def update(self):
-        keystate = pygame.key.get_pressed()
-        self.movement(keystate)
+        self.movement()
         self.border_control()
 
-    def movement(self, keystate):
-        if keystate[K_UP]:
+    def movement(self):
+        if self.upward:
             self.rect.y -= MOVE_SPEED
-        if keystate[K_DOWN]:
+        if self.downward:
             self.rect.y += MOVE_SPEED
-        if keystate[K_LEFT]:
+        if self.leftward:
             self.rect.x -= MOVE_SPEED
-        if keystate[K_RIGHT]:
+        if self.rightward:
             self.rect.x += MOVE_SPEED
+
+    def definition(self, key: int):
+        if key == K_UP: self.upward = True
+        if key == K_DOWN: self.downward = True
+        if key == K_LEFT: self.leftward = True
+        if key == K_RIGHT: self.rightward = True
 
     def border_control(self):
         if self.rect.right > WIN_WIDTH:
@@ -88,6 +92,8 @@ if __name__ == '__main__':
         clock.tick(FPS)
 
         for e in pygame.event.get():
+            if e.type == KEYDOWN:
+                player.definition(e.type)
             if e.type == pygame.QUIT:
                 running = False
 
