@@ -1,6 +1,5 @@
 import pygame
-from pygame.locals import KEYUP, KEYDOWN, K_LEFT, K_RIGHT, K_
-
+from pygame.locals import KEYDOWN, K_LEFT, K_RIGHT, K_UP, K_DOWN
 
 # объявление const
 DISPLAY = WIN_WIDTH, WIN_HEIGHT = 800, 600
@@ -39,26 +38,40 @@ class Object(pygame.sprite.Sprite):
 
 class Player(Object):
     def __init__(self, x: int, y: int):
-        super().__init__(64, 64, 'Sprites\\char_sprite_1.png', x, y)
+        super().__init__(64, 64, 'Enceladus\\Sprites\\char_sprite_1.png', x, y)
         self.health = 3
-        self.directions = {
-            'NORTH': -MOVE_SPEED,
-            'SOUTH': MOVE_SPEED,
-            'EAST': MOVE_SPEED,
-            'WEST': -MOVE_SPEED
-        }
 
-    def movement(self, direction: str):
-        if direction == 'NORTH' or direction == 'SOUTH':
-            self.rect.y += self.directions[direction]
-        elif direction == 'EAST' or direction == 'WEST':
-            self.rect.x += self.directions[direction]
+    def update(self):
+        keystate = pygame.key.get_pressed()
+        self.movement(keystate)
+        self.border_control()
+
+    def movement(self, keystate):
+        if keystate[K_UP]:
+            self.rect.y -= MOVE_SPEED
+        if keystate[K_DOWN]:
+            self.rect.y += MOVE_SPEED
+        if keystate[K_LEFT]:
+            self.rect.x -= MOVE_SPEED
+        if keystate[K_RIGHT]:
+            self.rect.x += MOVE_SPEED
+
+    def border_control(self):
+        if self.rect.right > WIN_WIDTH:
+            self.rect.right = WIN_WIDTH
+        if self.rect.left < 0:
+            self.rect.left = 0
+
+        if self.rect.bottom > WIN_HEIGHT:
+            self.rect.bottom = WIN_HEIGHT
+        if self.rect.top < 0:
+            self.rect.top = 0
 
 
 class Camera(object):
     def __init__(self, camera_func, width, height):
         self.camera_func = camera_func
-        self.state = Rect(0, 0, width, height)
+        self.state = pygame.Rect(0, 0, width, height)
 
     def apply(self, target):
         return target.rect.move(self.state.topleft)
@@ -68,19 +81,20 @@ class Camera(object):
 
 
 if __name__ == '__main__':
-    while pygame.quit() not in pygame.event.wait().type:
+    player = Player(50, 50)
+    sprites.add(player)
+    running = True
+    while running:
         clock.tick(FPS)
 
         for e in pygame.event.get():
-            if e.type == KEYDOWN and e.key == K_LEFT:
-                left = True
-            if e.type == KEYDOWN and e.key == K_RIGHT:
-                right = True
+            if e.type == pygame.QUIT:
+                running = False
 
-            if e.type == KEYUP and e.key == K_RIGHT:
-                right = False
-            if e.type == KEYUP and e.key == K_LEFT:
-                left = False
-        # обновление и вывод
         sprites.update()
-        pygame.display.update()
+
+        # Рендеринг
+        sprites.draw(screen)
+        pygame.display.flip()
+
+    pygame.quit()
