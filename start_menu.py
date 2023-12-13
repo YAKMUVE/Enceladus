@@ -19,7 +19,6 @@ def start_the_game():
     pass
 
 
-
 titlefont = pygame.font.SysFont('Ink Free', 50)
 widgetfont = pygame.font.SysFont('Ink Free', 45)
 theme = Theme(background_color='#b3deff',
@@ -30,7 +29,6 @@ theme = Theme(background_color='#b3deff',
               widget_padding=20)
 menu = pygame_menu.Menu('', 700, 700,
                         theme=theme)
-
 
 menu.add.button('Shop', start_the_game)
 menu.add.button('Play', start_the_game)
