@@ -1,19 +1,28 @@
 import pygame
 from pygame.locals import KEYDOWN, K_LEFT, K_RIGHT, K_UP, K_DOWN
 
-# объявление const
+# const
 DISPLAY = WIN_WIDTH, WIN_HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 7
 
+# const цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+
 # инициализация
 pygame.init()
 
-# подготовка переменных
+# подготовка
 screen = pygame.display.set_mode(DISPLAY)
 pygame.display.set_caption('Enceladus')
 clock = pygame.time.Clock()
-sprites = pygame.sprite.Group()
+entity = pygame.sprite.Group()
+immovable = pygame.sprite.Group()
 
 
 class Object(pygame.sprite.Sprite):
@@ -24,25 +33,37 @@ class Object(pygame.sprite.Sprite):
 
         self.image = pygame.image.load(path)
         self.image = pygame.transform.smoothscale(self.image, (self.width, self.height))
+        self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
-    # def rotate(self, degrees: int):
-    #     self.image = pygame.transform.rotate(self.image, degrees)
-
 
 class Player(Object):
     def __init__(self, x: int, y: int):
-        super().__init__(64, 64, 'Enceladus\\Sprites\\char_sprite_1.png', x, y)
+        super().__init__(64, 64, 'Sprites\\char_sprite_1.png', x, y)
         self.health = 3
 
-        self.xspeed, self.yspeed = 0, 0
+        self.upward = False
+        self.downward = False
+        self.leftward = False
+        self.rightward = False
 
     def update(self):
         self.movement()
+        self.conflict()
         self.border_control()
+
+    def definition(self, key: int):
+        if key == K_UP and not self.tracking(): self.upward = True
+        if key == K_DOWN and not self.tracking(): self.downward = True
+        if key == K_LEFT and not self.tracking(): self.leftward = True
+        if key == K_RIGHT and not self.tracking(): self.rightward = True
+
+    def tracking(self) -> bool:
+        valid = self.upward or self.downward or self.leftward or self.rightward
+        return valid
 
     def movement(self):
         if self.upward:
@@ -54,22 +75,29 @@ class Player(Object):
         if self.rightward:
             self.rect.x += MOVE_SPEED
 
-    def definition(self, key: int):
-        if key == K_UP: self.upward = True
-        if key == K_DOWN: self.downward = True
-        if key == K_LEFT: self.leftward = True
-        if key == K_RIGHT: self.rightward = True
+    def conflict(self):
+        hit = pygame.sprite.spritecollide(player, immovable, False)
+
+        for collision in hit:
+            if self.upward: self.upward = False
+            if self.downward: self.downward = False
+            if self.leftward: self.leftward = False
+            if self.rightward: self.rightward = False
 
     def border_control(self):
         if self.rect.right > WIN_WIDTH:
             self.rect.right = WIN_WIDTH
+            self.rightward = False
         if self.rect.left < 0:
             self.rect.left = 0
+            self.leftward = False
 
         if self.rect.bottom > WIN_HEIGHT:
             self.rect.bottom = WIN_HEIGHT
+            self.downward = False
         if self.rect.top < 0:
             self.rect.top = 0
+            self.upward = False
 
 
 class Camera(object):
@@ -84,23 +112,32 @@ class Camera(object):
         self.state = self.camera_func(self.state, target.rect)
 
 
+def render():
+    screen.fill(BLACK)
+
+    # отрисовка
+    entity.update()
+    immovable.update()
+
+    # Рендеринг
+    entity.draw(screen)
+    immovable.draw(screen)
+    pygame.display.flip()
+
+
 if __name__ == '__main__':
     player = Player(50, 50)
-    sprites.add(player)
+    entity.add(player)
     running = True
     while running:
         clock.tick(FPS)
 
-        for e in pygame.event.get():
-            if e.type == KEYDOWN:
-                player.definition(e.type)
-            if e.type == pygame.QUIT:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                player.definition(event.key)
+            if event.type == pygame.QUIT:
                 running = False
 
-        sprites.update()
-
-        # Рендеринг
-        sprites.draw(screen)
-        pygame.display.flip()
+        render()
 
     pygame.quit()
