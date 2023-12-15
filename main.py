@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import KEYDOWN, K_LEFT, K_RIGHT, K_UP, K_DOWN
 
 # const
-DISPLAY = WIN_WIDTH, WIN_HEIGHT = 800, 600
+DISPLAY = WIN_WIDTH, WIN_HEIGHT = 600, 800
 FPS = 60
 MOVE_SPEED = 7
 
@@ -23,6 +23,7 @@ pygame.display.set_caption('Enceladus')
 clock = pygame.time.Clock()
 entity = pygame.sprite.Group()
 immovable = pygame.sprite.Group()
+backgrounds = pygame.sprite.Group()
 
 
 class Object(pygame.sprite.Sprite):
@@ -143,10 +144,12 @@ def render():
     screen.fill(BLACK)
 
     # отрисовка
+    backgrounds.update()
     entity.update()
     immovable.update()
 
     # Рендеринг
+    backgrounds.draw(screen)
     entity.draw(screen)
     immovable.draw(screen)
     pygame.display.flip()
@@ -155,6 +158,8 @@ def render():
 if __name__ == '__main__':
     player = Player(50, 50)
     entity.add(player)
+    # background = Object(WIN_WIDTH, WIN_HEIGHT, 'Sprites/backgrounds/level_background.png', 0, 0)
+    # backgrounds.add(background)
     running = True
     while running:
         clock.tick(FPS)
