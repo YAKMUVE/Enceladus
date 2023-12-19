@@ -1,52 +1,56 @@
+import pygame
+
+
 class ButtonMenu:
-    def __init__(self, x, y, text):
-        self.width = 20
-        self.height = 20
+    def __init__(self, x, y, width, height, text):
+        self.width = width
+        self.height = height
         self.text = text
-        self.pic = pygame.image.load('but1.png')
-        self.hovered_pic = pygame.image.load('but2.png')
-        self.pic = pygame.transform.scale(self.pic, (self.width, self.height))
-        self.hovered_pic = pygame.transform.scale(self.hovered_pic, (self.width, self.height))
+        self.passive_pic = pygame.image.load('but2.JPG')
+        self.active_pic = pygame.image.load('but1.JPG')
+        self.passive_pic = pygame.transform.scale(self.passive_pic, (self.width, self.height))
+        self.active_pic = pygame.transform.scale(self.active_pic, (self.width, self.height))
 
-        self.rect = self.pic.get_rect(topleft=(x, y))
-        self.sound = pygame.mixer.Sound('choice.mp3')
-        self.rect = self.pic.get_rect(topleft=(x, y))
-
+        self.rect = self.passive_pic.get_rect(topleft=(x, y))
         self.hovered = False
 
     def drawer(self, screen):
-        picture = self.hovered_pic if self.hovered else self.pic
-        screen.blit(self.pic, self.rect.topleft)
+        screen.blit(self.active_pic if self.hovered else self.passive_pic, self.rect.topleft)
         font = pygame.font.SysFont('Ink Free', 36)
-        font = font.render(self.text, True, (255, 255, 255))
-        rect = font.get_rect(center=self.rect.center)
-        screen.blit(font, rect)
+        text_rendered = font.render(self.text, True, (255, 255, 255))
+        text_rect = text_rendered.get_rect(center=self.rect.center)
+        screen.blit(text_rendered, text_rect)
 
     def hover_checker(self, pos):
         self.hovered = self.rect.collidepoint(pos)
 
-    def eventor(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.hovered:
-            self.sound.play()
-            pygame.event.post(pygame.event.Event(pygame.USEREVENT, button=self))
-
-
-w, h = 700, 700
-screen = pygame.display.set_mode((w, h))
-
-button = ButtonMenu(100, 100, 'shop',)
-
 
 def main_menu():
+    pygame.init()
+    w, h = 700, 500
+    screen = pygame.display.set_mode((w, h))
+    background = pygame.image.load('menu_background.JPG')
+    background = pygame.transform.scale(background, (w, h))
+
+    buttons = [
+        ButtonMenu(100, 100, 200, 50, 'Shop'),
+    ]
+
     running = True
     while running:
-        screen.fill((0, 0, 0))
+        screen.blit(background, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                pygame.quit()
-        button.hover_checker(pygame.mouse.get_pos())
-        button.drawer(screen)
+            for button in buttons:
+                button.hover_checker(pygame.mouse.get_pos())
+
+        for button in buttons:
+            button.drawer(screen)
+
         pygame.display.flip()
+
+    pygame.quit()
+
 
 main_menu()
