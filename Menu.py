@@ -30,6 +30,42 @@ class ButtonMenu:
             self.sound.play()
 
 
+class ShopWindow:
+    def __init__(self, screen):
+        self.screen = screen
+        self.background = pygame.image.load('shop_background.png')
+        self.background = pygame.transform.scale(self.background, (700, 700))
+
+        # Кнопки покупки скинов
+        self.items = [
+            ButtonMenu(100, 100, 200, 50, 'Инфернальный Эйс\n Купить [Цена]', 'buy_sound.mp3'),
+            ButtonMenu(100, 100, 200, 50, 'Традиционный Эйс\n Купить [Цена]', 'buy_sound.mp3'),
+            ButtonMenu(100, 100, 200, 50, 'Боец галактики Эйс\n Купить [Цена]', 'buy_sound.mp3')
+        ]
+        self.return_button = ButtonMenu(550, 600, 150, 50, 'Вернуться в меню', 'back.mp3')
+
+    def run(self):
+        running = True
+        while running:
+            self.screen.blit(self.background, (0, 0))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+                pos = pygame.mouse.get_pos()
+                for item in self.items:
+                    item.hover_checker(pos)
+                    item.eventor(event)
+                self.return_button.hover_checker(pos)
+                self.return_button.eventor(event)
+
+            for item in self.items:
+                item.drawer(self.screen)
+            self.return_button.drawer(self.screen)
+
+            pygame.display.flip()
+
+
 def main_menu():
     pygame.init()
     w, h = 700, 700
@@ -52,7 +88,10 @@ def main_menu():
                 button.eventor(event)
 
         for button in buttons:
-            button.drawer(screen)
+            if button == shop_button and button.hovered:
+                ShopWindow(screen).run()
+            else:
+                button.drawer(screen)
 
         pygame.display.flip()
 
