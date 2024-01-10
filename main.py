@@ -207,14 +207,11 @@ class Levels(pygame.sprite.Sprite):
         self.markup = markup
         self.designations = designations
 
+        self.players = pygame.sprite.Group()
         self.entities = pygame.sprite.Group()
         self.immovable = pygame.sprite.Group()
 
-        self.entities.add(Object(64, 64, f'{DIR_GENERAL}/char_sprite_1.png', 200, 200))
-        self.immovable.add(Object(44, 44, f'{DIR_GENERAL}/block.png', 200, 200))
-
-        self.background_image = False
-        self.background_rect = None
+        self.load_background()
 
     def generation(self):
         x, y = 0, 0
@@ -222,9 +219,9 @@ class Levels(pygame.sprite.Sprite):
             for elem in line:
                 decoding = self.designations.get(elem, False)
                 if isinstance(decoding, Entity):
-                    entities.add(decoding)
+                    self.entities.add(decoding)
                 elif isinstance(decoding, Object):
-                    immovable.add(decoding)
+                    self.immovable.add(decoding)
 
                 x += decoding.width
                 if elem == line[-1]:
@@ -238,6 +235,11 @@ class Levels(pygame.sprite.Sprite):
         self.background_rect = self.background_image.get_rect()
         self.background_rect.x = 0
         self.background_rect.y = 0
+
+    def clear_groups(self):
+        self.players = pygame.sprite.Group()
+        self.immovable = pygame.sprite.Group()
+        self.entities = pygame.sprite.Group()
 
 
 # class Background(pygame.sprite.Sprite):
@@ -266,15 +268,15 @@ class Level1(Levels):
         self.snow_per_pixel = 250
         self.level_height = 0
 
-    def update(self):
+    def level_update(self):
+        if self.background_image:
+            screen.blit(self.background_image, (0, 0))
+
         self.add_drop()
         self.update_drops()
 
         self.snowflake_painter()
         self.level_painter()
-
-        if self.background_image:
-            screen.blit(self.background_image, (0, 0))
 
     def add_drop(self):
         self.snowflakes.append([random.randint(0, SCREEN_WIDTH), 0])
@@ -299,52 +301,38 @@ class Level1(Levels):
         pygame.draw.rect(screen, self.color,
                          (0, SCREEN_HEIGHT - self.level_height, SCREEN_WIDTH, self.level_height))
 
+    def render(self):
+        screen.fill(BLACK)
 
-def render():
-    screen.fill(BLACK)
+        self.players.update()
+        self.immovable.update()
+        self.entities.update()
+        self.level_update()
 
-    # отрисовка
-    players.update()
-    immovable.update()
-    entities.update()
+        self.players.draw(screen)
+        self.immovable.draw(screen)
+        self.entities.draw(screen)
 
-    # Рендеринг
-    players.draw(screen)
-    immovable.draw(screen)
-    entities.draw(screen)
-    pygame.display.flip()
+        pygame.display.flip()
 
+    def run(self):
+        player = Player(50, 50)
+        players.add(player)
+        running = True
+        while running:
+            clock.tick(FPS)
 
-def clear_groups():
-    global players, immovable, entities, classes
-    players = pygame.sprite.Group()
-    immovable = pygame.sprite.Group()
-    entities = pygame.sprite.Group()
-    classes = pygame.sprite.Group()
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    player.definition(event.key)
+                if event.type == pygame.QUIT:
+                    running = False
+
+            self.render()
 
 
 if __name__ == '__main__':
-    player = Player(50, 50)
-    # camera = CameraAwareLayeredUpdates(player, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
-
-    players.add(player)
-    level = int(input())
-
-    running = True
-    while running:
-        clock.tick(FPS)
-
-        if level == 1:
-            clear_groups()
-
-            level = -1
-
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                player.definition(event.key)
-            if event.type == pygame.QUIT:
-                running = False
-
-        render()
+    playing = Level1()
+    playing.run()
 
     pygame.quit()
