@@ -301,6 +301,13 @@ class Level1(Levels):
         pygame.draw.rect(screen, self.color,
                          (0, SCREEN_HEIGHT - self.level_height, SCREEN_WIDTH, self.level_height))
 
+    def position_cheker(self, char):
+        snow_pos = SCREEN_HEIGHT - self.level_height
+        char_pos = char.rect.bottom
+        if snow_pos <= char_pos:
+            return False
+        return True
+
     def render(self):
         screen.fill(BLACK)
 
@@ -321,6 +328,9 @@ class Level1(Levels):
         running = True
         while running:
             clock.tick(FPS)
+
+            if not self.position_cheker(player):
+                running = False
 
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
