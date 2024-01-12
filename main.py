@@ -7,6 +7,8 @@ import random
 DISPLAY = SCREEN_WIDTH, SCREEN_HEIGHT = 600, 800
 FPS = 35
 MOVE_SPEED = 7
+MAZE_SIZE = (16, 22)
+CELL_SIZE = 35
 
 # const paths
 DIR_GENERAL = 'Sprites/general'
@@ -34,35 +36,42 @@ clock = pygame.time.Clock()
 players = pygame.sprite.Group()
 immovable = pygame.sprite.Group()
 entities = pygame.sprite.Group()
-classes = pygame.sprite.Group()
 
 
-# db
-# def database_maker():
-#     con = sq.connect('progress.db')
-#     cur = con.cursor()
-#     cur.execute("""
-#     CREATE TABLE IF NOT EXISTS 'achievements'(
-#         'level'   TEXT,
-#         'sum' INTEGER,
-#         'weapon'  TEXT,
-#         'extra'   TEXT
-#     );
-#     """)
-#     con.commit()
-#     r = cur.execute("""SELECT * FROM 'achievements'""").fetchall()
-#     if not r:
-#         cur.execute("""INSERT INTO 'achievements'(level) VALUES('0')""")
-#         con.commit()
-#     con.close()
-#
-#
-# def database_changer(column, value):
-#     con = sq.connect('progress.db')
-#     cur = con.cursor()
-#     cur.execute(f"UPDATE 'achievements' SET {column}=?", (value, ))
-#     con.commit()
-#     con.close()
+def database_maker():
+    con = sq.connect('NEW.db')
+    cur = con.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS 'achievements'(
+        'level'   TEXT,
+        'sum' INTEGER,
+        'weapon'  TEXT,
+        'extra'   TEXT
+    );
+    """)
+    con.commit()
+    r = cur.execute("""SELECT * FROM 'achievements'""").fetchall()
+    if not r:
+        cur.execute("""INSERT INTO 'achievements'(level) VALUES('0')""")
+        con.commit()
+    con.close()
+
+
+def database_changer(column, value):
+    con = sq.connect('NEW.db')
+    cur = con.cursor()
+    cur.execute(f"UPDATE 'achievements' SET {column}=?", (value,))
+    con.commit()
+    con.close()
+
+
+def level_determinant():
+    con = sq.connect('NEW.db')
+    cur = con.cursor()
+    r = cur.execute("""SELECT level from 'achievements'""").fetchall()
+    r = int(r[0][0])
+    con.close()
+    return r
 
 
 class Object(pygame.sprite.Sprite):
