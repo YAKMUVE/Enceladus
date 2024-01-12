@@ -1,7 +1,8 @@
 import pygame
-from pygame.locals import KEYDOWN, K_LEFT, K_RIGHT, K_UP, K_DOWN
-
 import random
+
+from maze import Maze
+from db_worker import *
 
 # const
 DISPLAY = SCREEN_WIDTH, SCREEN_HEIGHT = 600, 800
@@ -11,8 +12,8 @@ MAZE_SIZE = (16, 22)
 CELL_SIZE = 35
 
 # const paths
-DIR_GENERAL = 'Sprites/general'
-DIR_BACKGROUNDS = 'Sprites/backgrounds'
+DIR_GENERAL = '../Sprites/general'
+DIR_BACKGROUNDS = '../Sprites/backgrounds'
 DIR_LEVEL_1 = 'Sprites/level_1'
 DIR_LEVEL_2 = 'Sprites/level_2'
 DIR_LEVEL_3 = 'Sprites/level_3'
@@ -38,42 +39,6 @@ immovable = pygame.sprite.Group()
 entities = pygame.sprite.Group()
 
 
-def database_maker():
-    con = sq.connect('NEW.db')
-    cur = con.cursor()
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS 'achievements'(
-        'level'   TEXT,
-        'sum' INTEGER,
-        'weapon'  TEXT,
-        'extra'   TEXT
-    );
-    """)
-    con.commit()
-    r = cur.execute("""SELECT * FROM 'achievements'""").fetchall()
-    if not r:
-        cur.execute("""INSERT INTO 'achievements'(level) VALUES('0')""")
-        con.commit()
-    con.close()
-
-
-def database_changer(column, value):
-    con = sq.connect('NEW.db')
-    cur = con.cursor()
-    cur.execute(f"UPDATE 'achievements' SET {column}=?", (value,))
-    con.commit()
-    con.close()
-
-
-def level_determinant():
-    con = sq.connect('NEW.db')
-    cur = con.cursor()
-    r = cur.execute("""SELECT level from 'achievements'""").fetchall()
-    r = int(r[0][0])
-    con.close()
-    return r
-
-
 class Object(pygame.sprite.Sprite):
     def __init__(self, width: int, height: int, path: str, x: int, y: int):
         """
@@ -94,6 +59,9 @@ class Object(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+    def coord_returner(self):
+        return (self.rect.x, self.rect.y)
 
 
 class Entity(pygame.sprite.Sprite):
@@ -153,50 +121,40 @@ class Player(Object):
         :x: координата объекта по оски x
         :y: координата объекта по оски y
         """
-        super().__init__(64, 64, 'Sprites/general/char_sprite_1.png', x, y)
+        super().__init__(32, 32, 'Sprites/general/char_sprite_1.png', x, y)
         self.health = 3
 
         # трекер движения игрока
-        self.upward = False
-        self.downward = False
-        self.leftward = False
-        self.rightward = False
-
-    def set_pos(self, x, y):
-        self.rect.x = x
-        self.rect.y = y
+        # self.upward = False
+        # self.downward = False
+        # self.leftward = False
+        # self.rightward = False
 
     def update(self):
         self.movement()
         self.conflict()
         self.border_control()
 
-    def definition(self, key: int):
-        """
-        definition отслеживает передвижения игрока
-
-        :key: ключ (id) нажатой кнопки
-        """
-        if key == K_UP and not self.tracking(): self.upward = True
-        if key == K_DOWN and not self.tracking(): self.downward = True
-        if key == K_LEFT and not self.tracking(): self.leftward = True
-        if key == K_RIGHT and not self.tracking(): self.rightward = True
-
-    def tracking(self) -> bool:
-        """
-        :return: направляется ли уже куда-то игрок
-        """
-        valid = self.upward or self.downward or self.leftward or self.rightward
-        return valid
-
     def movement(self):
         """
-        movement передвигает игрока
+
+        :keys: ключ (id) нажатой кнопки
         """
-        if self.upward: self.rect.y -= MOVE_SPEED
-        if self.downward: self.rect.y += MOVE_SPEED
-        if self.leftward: self.rect.x -= MOVE_SPEED
-        if self.rightward: self.rect.x += MOVE_SPEED
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w]: self.rect.y -= MOVE_SPEED
+        if keys[pygame.K_s]: self.rect.y += MOVE_SPEED
+        if keys[pygame.K_a]: self.rect.x -= MOVE_SPEED
+        if keys[pygame.K_d]: self.rect.x += MOVE_SPEED
+
+
+    # def movement(self):
+    #     """
+    #     movement передвигает игрока
+    #     """
+    #     if self.upward: self.rect.y -= MOVE_SPEED
+    #     if self.downward: self.rect.y += MOVE_SPEED
+    #     if self.leftward: self.rect.x -= MOVE_SPEED
+    #     if self.rightward: self.rect.x += MOVE_SPEED
 
     def conflict(self):
         """
@@ -250,20 +208,20 @@ class Levels(pygame.sprite.Sprite):
 
         self.load_background()
 
-    def generation(self):
-        x, y = 0, 0
-        for line in self.markup:
-            for elem in line:
-                decoding = self.designations.get(elem, False)
-                if isinstance(decoding, Entity):
-                    self.entities.add(decoding)
-                elif isinstance(decoding, Object):
-                    self.immovable.add(decoding)
-
-                x += decoding.width
-                if elem == line[-1]:
-                    y += decoding.height
-                    x = 0
+    # def generation(self):
+    #     x, y = 0, 0
+    #     for line in self.markup:
+    #         for elem in line:
+    #             decoding = self.designations.get(elem, False)
+    #             if isinstance(decoding, Entity):
+    #                 self.entities.add(decoding)
+    #             elif isinstance(decoding, Object):
+    #                 self.immovable.add(decoding)
+    #
+    #             x += decoding.width
+    #             if elem == line[-1]:
+    #                 y += decoding.height
+    #                 x = 0
 
     def load_background(self):
         self.background_image = pygame.image.load(self.background_path)
@@ -278,39 +236,12 @@ class Levels(pygame.sprite.Sprite):
         self.immovable = pygame.sprite.Group()
         self.entities = pygame.sprite.Group()
 
-
-# class Background(pygame.sprite.Sprite):
-#     def __init__(self):
-#         pygame.sprite.Sprite.__init__(self)
-#
-#         self.image = None
-#         self.rect = None
-#
-#     def load_image(self, path):
-#         self.image = pygame.image.load(path)
-#         self.image = pygame.transform.smoothscale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-#
-#         self.rect = self.image.get_rect()
-#         self.rect.x = 0
-#         self.rect.y = 0
-
-
-class Level1(Levels):
-    def __init__(self):
-        Levels.__init__(self, f'{DIR_BACKGROUNDS}/level_background.png', '', {})
-        self.color = '#4db2ff'
-        self.landed = 0
-
-        self.snowflakes = []
-        self.snow_per_pixel = 250
-        self.level_height = 0
-
     def level_update(self):
         if self.background_image:
             screen.blit(self.background_image, (0, 0))
 
         self.add_drop()
-        self.update_drops()
+        self.update_drops(0)
 
         self.snowflake_painter()
         self.level_painter()
@@ -324,14 +255,14 @@ class Level1(Levels):
             pygame.draw.line(screen, self.color, (i[0], i[1]), (i[0], i[1] + 7), 3)
 
     # подъем уровня
-    def update_drops(self):
+    def update_drops(self, lh):
         for i in self.snowflakes:
             i[1] += 5
             if i[1] >= SCREEN_HEIGHT:
                 self.snowflakes.remove(i)
                 self.landed += 10
                 if self.landed % self.snow_per_pixel == 0:
-                    self.level_height += 3
+                    self.level_height += lh
 
     # рисование уровня снега
     def level_painter(self):
@@ -370,12 +301,114 @@ class Level1(Levels):
                 running = False
 
             for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    player.definition(event.key)
                 if event.type == pygame.QUIT:
                     running = False
 
+            for x in range(MAZE_SIZE[0]):
+                for y in range(MAZE_SIZE[1]):
+                    maze_drawer(x, y)
+
             self.render()
+
+
+# class Background(pygame.sprite.Sprite):
+#     def __init__(self):
+#         pygame.sprite.Sprite.__init__(self)
+#
+#         self.image = None
+#         self.rect = None
+#
+#     def load_image(self, path):
+#         self.image = pygame.image.load(path)
+#         self.image = pygame.transform.smoothscale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+#
+#         self.rect = self.image.get_rect()
+#         self.rect.x = 0
+#         self.rect.y = 0
+
+
+class Level1(Levels):
+    def __init__(self):
+        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl1_background.png', '', {})
+        self.color = '#4db2ff'
+        self.landed = 0
+
+        self.snowflakes = []
+        self.snow_per_pixel = 250
+        self.level_height = 0
+
+
+class Level2(Levels):
+    def __init__(self):
+        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl2_background.png', '', {})
+        self.color = '#4db2ff'
+        self.landed = 0
+
+        self.snowflakes = []
+        self.snow_per_pixel = 300
+        self.level_height = 0
+
+
+def set_maze():
+    global m, sol, bx, by, lines
+    m = Maze(MAZE_SIZE)
+    sol = []
+
+    bx, by = (10, 10)
+
+    lines = []
+
+
+def maze_drawer(x, y):
+    if not (x - 1, y, x, y) in m.doors and not (x + y == 0):
+        coords = ((bx + x * CELL_SIZE, by + y * CELL_SIZE), (bx + x * CELL_SIZE, by + (y + 1) * CELL_SIZE))
+        pygame.draw.line(screen, WHITE, coords[0], coords[1], 4)
+        lines.append(coords)
+
+    else:
+        if (x - 1, y) in sol and (x, y) in sol:
+            coords = ((bx + x * CELL_SIZE - CELL_SIZE // 2, by + y * CELL_SIZE + CELL_SIZE // 2),
+                      (bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE + CELL_SIZE // 2))
+
+            pygame.draw.line(screen, (0, 255, 0), coords[0], coords[1], 4)
+            lines.append(coords)
+
+    if not (x, y, x + 1, y) in m.doors:
+        coords = ((bx + (x + 1) * CELL_SIZE, by + y * CELL_SIZE),
+                  (bx + (x + 1) * CELL_SIZE, by + (y + 1) * CELL_SIZE))
+        pygame.draw.line(screen, WHITE, coords[0], coords[1], 4)
+        lines.append(coords)
+
+    else:
+        if (x, y) in sol and (x + 1, y) in sol:
+            coords = ((bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE + CELL_SIZE // 2),
+                      (bx + x * CELL_SIZE + 3 * (CELL_SIZE // 2), by + y * CELL_SIZE + CELL_SIZE // 2))
+            pygame.draw.line(screen, (0, 255, 0), coords[0], coords[1], 4)
+            lines.append(coords)
+
+    if not (x, y - 1, x, y) in m.doors:
+        coords = ((bx + x * CELL_SIZE, by + y * CELL_SIZE), (bx + (x + 1) * CELL_SIZE, by + y * CELL_SIZE))
+        pygame.draw.line(screen, WHITE, coords[0], coords[1], 4)
+        lines.append(coords)
+
+    else:
+        if (x, y - 1) in sol and (x, y) in sol:
+            coords = ((bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE - CELL_SIZE // 2),
+                      (bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE + CELL_SIZE // 2))
+            pygame.draw.line(screen, (0, 255, 0), coords[0], coords[1], 4)
+            lines.append(coords)
+
+    if not (x, y, x, y + 1) in m.doors and not (x + y == MAZE_SIZE[0] + MAZE_SIZE[1] - 2):
+        coords = ((bx + x * CELL_SIZE, by + (y + 1) * CELL_SIZE),
+                  (bx + (x + 1) * CELL_SIZE, by + (y + 1) * CELL_SIZE))
+        pygame.draw.line(screen, WHITE, coords[0], coords[1], 4)
+        lines.append(coords)
+    else:
+        if (x, y) in sol and (x, y + 1) in sol:
+            coords = ((bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE + CELL_SIZE // 2),
+                      (bx + x * CELL_SIZE + CELL_SIZE // 2, by + y * CELL_SIZE + 3 * (CELL_SIZE // 2)))
+            pygame.draw.line(screen, (0, 255, 0), coords[0], coords[1], 4)
+            lines.append(coords)
 
 
 if __name__ == '__main__':
