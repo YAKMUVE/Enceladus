@@ -291,6 +291,7 @@ class Levels(pygame.sprite.Sprite):
         pygame.display.flip()
 
     def run(self):
+        set_maze()
         player = Player(50, 50)
         players.add(player)
         running = True
