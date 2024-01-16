@@ -368,7 +368,7 @@ def maze_drawer(x, y):
         coords = ((bx + x * CELL_SIZE, by + y * CELL_SIZE), (bx + x * CELL_SIZE, by + (y + 1) * CELL_SIZE))
         pygame.draw.line(screen, WHITE, coords[0], coords[1], 4)
         lines.append(coords)
-        wall_positios.append(pygame.rect(bx + x * CELL_SIZE, by + y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        wall_positions.append(pygame.rect(bx + x * CELL_SIZE, by + y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
 
     else:
         if (x - 1, y) in sol and (x, y) in sol:
