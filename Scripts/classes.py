@@ -4,6 +4,8 @@ import random
 from maze import Maze
 from db_worker import *
 
+from pathlib import Path
+
 # const
 DISPLAY = SCREEN_WIDTH, SCREEN_HEIGHT = 600, 800
 FPS = 35
@@ -12,12 +14,12 @@ MAZE_SIZE = (16, 22)
 CELL_SIZE = 35
 
 # const paths
-DIR_GENERAL = '../Sprites/general'
-DIR_BACKGROUNDS = '../Sprites/backgrounds'
-DIR_LEVEL_1 = 'Sprites/level_1'
-DIR_LEVEL_2 = 'Sprites/level_2'
-DIR_LEVEL_3 = 'Sprites/level_3'
-DIR_LEVEL_4 = 'Sprites/level_4'
+DIR_GENERAL = f'{Path(__file__).parents[1]}/Sprites/general'
+DIR_BACKGROUNDS = f'{Path(__file__).parents[1]}/Sprites/backgrounds'
+DIR_LEVEL_1 = f'{Path(__file__).parents[1]}/Sprites/level_1'
+DIR_LEVEL_2 = f'{Path(__file__).parents[1]}/Sprites/level_2'
+DIR_LEVEL_3 = f'{Path(__file__).parents[1]}/Sprites/level_3'
+DIR_LEVEL_4 = f'{Path(__file__).parents[1]}/Sprites/level_4'
 
 # const цвета
 WHITE = (255, 255, 255)
@@ -121,7 +123,7 @@ class Player(Object):
         :x: координата объекта по оски x
         :y: координата объекта по оски y
         """
-        super().__init__(32, 32, 'Sprites/general/char_sprite_1.png', x, y)
+        super().__init__(32, 32, f'{DIR_GENERAL}/char_sprite_1.png', x, y)
         self.health = 3
 
         # трекер движения игрока
@@ -330,7 +332,6 @@ class Levels(pygame.sprite.Sprite):
 
 class Level1(Levels):
     def __init__(self):
-        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl1_background.png', '', {})
         self.color = '#4db2ff'
         self.landed = 0
 
@@ -338,16 +339,19 @@ class Level1(Levels):
         self.snow_per_pixel = 250
         self.level_height = 0
 
+        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl1_background.png', '', {})
+
 
 class Level2(Levels):
     def __init__(self):
-        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl2_background.png', '', {})
         self.color = '#4db2ff'
         self.landed = 0
 
         self.snowflakes = []
         self.snow_per_pixel = 300
         self.level_height = 0
+
+        Levels.__init__(self, f'{DIR_BACKGROUNDS}/lvl2_background.png', '', {})
 
 
 def set_maze():
